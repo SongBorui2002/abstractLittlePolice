@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>的得地小警察</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #fafafa;
+        }
+        .upload-area.drag-over {
+            border-color: #4CAF50;
+            background-color: #E8F5E9;
+        }
+        #fileInput {
+            display: none;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status-processing {
+            background-color: #FFF3E0;
+            color: #E65100;
+        }
+        .status-success {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+        }
+        .status-error {
+            background-color: #FFEBEE;
+            color: #C62828;
+        }
+        #downloadArea {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .download-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: background-color 0.3s;
+        }
+        .download-btn:hover {
+            background-color: #1976D2;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #f1f1f1;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 4px;
+            transition: width 0.3s ease-in-out;
+        }
+        .comparison-container {
+            display: none;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .subtitle-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .subtitle-column-wrapper {
+            position: relative;
+            display: flex;
+        }
+        .subtitle-column {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            height: 600px;
+            flex-grow: 1;
+            position: relative;
+            overflow-y: scroll;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .scroll-marker-area {
+            width: 16px;
+            background: #f0f0f0;
+            position: relative;
+            border-radius: 0 4px 4px 0;
+            margin-left: 1px;
+        }
+        .marker {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background-color: #ff0000;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .marker:hover {
+            opacity: 0.8;
+        }
+        .marker-tooltip {
+            position: absolute;
+            background: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            right: 20px;
+            white-space: nowrap;
+            display: none;
+            z-index: 1000;
+        }
+        .marker:hover .marker-tooltip {
+            display: block;
+        }
+        .subtitle-entry {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+        }
+        .sentence-index {
+            min-width: 30px;
+            margin-right: 10px;
+            color: #666;
+            font-weight: bold;
+        }
+        .sentence-content {
+            flex: 1;
+            line-height: 1.6;
+        }
+        .subtitle-entry.modified {
+            /*background-color: #ffebee;*/
+            border-left: 3px solid #ef5050;
+        }
+        .text-diff {
+            background-color: #ffebee;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        .subtitle-column::-webkit-scrollbar {
+            width: 16px;
+        }
+        .subtitle-column::-webkit-scrollbar-track {
+            background: #f0f0f0;
+        }
+        .subtitle-column::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 8px;
+            border: 4px solid #f0f0f0;
+        }
+        .subtitle-column::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+        }
+        .dedede-modified {
+            /*设定字体颜色*/
+            color: #ef5050;
+            /*background-color: rgb(255, 235, 238);*/
+            /*!*padding: 0 2px;*!*/
+            /*border-radius: 4px;*/
+            font-weight: bold;
+        }
+        i .dedede-modified {
+            font-style: italic;
+        }
+         .modal {
+             display: none;
+             position: fixed;
+             z-index: 1000;
+             left: 0;
+             top: 0;
+             width: 100%;
+             height: 100%;
+             background-color: rgba(0,0,0,0.5);
+         }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+
+        .parameter-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: grid;
+            gap: 0px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .form-group input[type="number"] {
+            width: 100%;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .modal-buttons .cancel-btn {
+            background-color: #e65100;
+            color: white;
+        }
+
+        .modal-buttons .save-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .text-input {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            line-height: 1.6;
+            font-family: 'Microsoft YaHei', sans-serif;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .subtitle-entry.new-paragraph {
+            margin-top: 30px;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>的得地小警察</h1>
+    <div class="upload-area" id="dropArea">
+        <p>请输入需要修改的论文摘要：</p>
+        <textarea id="paperInput" class="text-input" placeholder="在此输入论文摘要内容..."></textarea>
+    </div>
+
+    <!-- 参数配置模态框 -->
+    <div id="parameterModal" class="modal">
+        <div class="modal-content">
+            <h2>模型参数配置</h2>
+            <form id="parameterForm" class="parameter-form">
+                <!-- 输入siliconflow key -->
+                <div class="form-group">
+                    <label for="siliconflowKey">SiliconFlow Key</label>
+                    <input type="text" id="siliconflowKey" name="siliconflowKey" value="sk-zgmoobmtrwgqjyjyvuuipdhxqnjeqmdzpuqjjmkxfbgakecg" required>
+                </div>
+                <div class="form-group">
+                    <label for="model">选择模型</label>
+                    <select id="model" name="model" required>
+                        <option value="Pro/deepseek-ai/DeepSeek-V3-1226">Pro/deepseek-ai/DeepSeek-V3-1226</option>
+                        <option value="THUDM/GLM-Z1-32B-0414">THUDM/GLM-Z1-32B-0414</option>
+                        <option value="Pro/deepseek-ai/DeepSeek-V3">Pro/deepseek-ai/DeepSeek-V3</option>
+                        <option value="Pro/deepseek-ai/DeepSeek-R1">Pro/deepseek-ai/DeepSeek-R1</option>
+                        <option value="THUDM/GLM-4-32B-0414">THUDM/GLM-4-32B-0414</option>
+                        <option value="THUDM/GLM-Z1-9B-0414">THUDM/GLM-Z1-9B-0414</option>
+                        <option value="THUDM/GLM-4-9B-0414">THUDM/GLM-4-9B-0414</option>
+                        <option value="Qwen/Qwen2.5-VL-32B-Instruct">Qwen/Qwen2.5-VL-32B-Instruct</option>
+                        <option value="deepseek-ai/DeepSeek-V3">deepseek-ai/DeepSeek-V3</option>
+                        <option value="deepseek-ai/DeepSeek-R1">deepseek-ai/DeepSeek-R1</option>
+                        <option value="Qwen/QwQ-32B">Qwen/QwQ-32B</option>
+                        <option value="Qwen/Qwen2.5-VL-72B-Instruct">Qwen/Qwen2.5-VL-72B-Instruct</option>
+                        <option value="Pro/Qwen/Qwen2.5-VL-7B-Instruct">Pro/Qwen/Qwen2.5-VL-7B-Instruct</option>
+                        <option value="deepseek-ai/DeepSeek-R1-Distill-Qwen-32B">deepseek-ai/DeepSeek-R1-Distill-Qwen-32B</option>
+                        <option value="deepseek-ai/DeepSeek-R1-Distill-Qwen-14B">deepseek-ai/DeepSeek-R1-Distill-Qwen-14B</option>
+                        <option value="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B">deepseek-ai/DeepSeek-R1-Distill-Qwen-7B</option>
+                        <option value="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B">deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B</option>
+                        <option value="Qwen/QVQ-72B-Preview">Qwen/QVQ-72B-Preview</option>
+                        <option value="internlm/internlm2_5-20b-chat">internlm/internlm2_5-20b-chat</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="maxTokens">MaxTokens (1-4096)</label>
+                    <input type="number" id="maxTokens" name="maxTokens" min="1" max="4096" value="4096" required>
+                </div>
+                <div class="form-group">
+                    <label for="temperature">temperature (0-1)</label>
+                    <input type="number" id="temperature" name="temperature" min="0" max="1" step="0.1" value="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="topP">Top P (0-1)</label>
+                    <input type="number" id="topP" name="topP" min="0" max="1" step="0.01" value="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="topK">Top K (1-100)</label>
+                    <input type="number" id="topK" name="topK" min="1" max="100" value="30" required>
+                </div>
+                <div class="form-group">
+                    <label for="frequencyPenalty">frequencyPenalty (0-2)</label>
+                    <input type="number" id="frequencyPenalty" name="frequencyPenalty" min="0" max="2" step="0.1" value="0.5" required>
+                </div>
+                <div class="form-group">
+                    <label for="systemPrompt">系统提示词</label>
+                    <textarea id="systemPrompt" name="systemPrompt" rows="3" placeholder="请输入系统提示词，如果不填写将使用默认提示词"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="cancel-btn" onclick="closeParameterModal()">取消</button>
+                    <button type="submit" class="save-btn">确定</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <button class="btn" id="startButton">开始修改</button>
+    </div>
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div id="status"></div>
+    <div id="downloadArea">
+        <button class="download-btn" id="downloadBtn">下载修正后的字幕</button>
+    </div>
+    <div class="comparison-container" id="comparisonContainer">
+        <h2>字幕对照</h2>
+        <div class="subtitle-grid">
+            <div class="subtitle-column" id="originalSubtitles">
+                <h3>原始字幕</h3>
+                <div id="originalContent"></div>
+            </div>
+            <div class="subtitle-column-wrapper">
+                <div class="subtitle-column" id="correctedSubtitles">
+                    <h3>修正后字幕</h3>
+                    <div id="correctedContent"></div>
+                </div>
+                <div class="scroll-marker-area" id="markerArea"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const dropArea = document.getElementById('dropArea');
+    const status = document.getElementById('status');
+    const downloadArea = document.getElementById('downloadArea');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const startButton = document.getElementById('startButton');
+    const comparisonContainer = document.getElementById('comparisonContainer');
+    const originalContent = document.getElementById('originalContent');
+    const correctedContentDiv = document.getElementById('correctedContent');
+    const markerArea = document.getElementById('markerArea');
+    const paperInput = document.getElementById('paperInput');
+
+    let correctedContent = '';
+    let originalSubtitles = [];
+    let correctedSubtitles = [];
+    let modifiedEntries = [];
+    let subtitlePositions = new Map();
+    let isScrolling = false;
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    startButton.addEventListener('click', showParameterModal);
+
+    function processFile() {
+        const inputText = paperInput.value.trim();
+        
+        if (!inputText) {
+            showStatus('请先选择字幕文件', 'error');
+            return;
+        }
+
+        showStatus('正在处理字幕文件，请稍候...', 'processing');
+        progressContainer.style.display = 'block';
+        startButton.disabled = true;
+        downloadArea.style.display = 'none';
+
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            if (progress < 90) {
+                progress += Math.random() * 10;
+                progressBar.style.width = Math.min(progress, 90) + '%';
+            }
+        }, 500);
+
+        fetch('/api/correct', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                content: inputText,
+                parameters: modelParameters
+            })
+        })
+        .then(response => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || '处理内容时发生错误');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            originalSubtitles = parseText(data.original);
+            correctedSubtitles = parseText(data.corrected);
+            correctedContent = data.corrected;
+
+            showComparison();
+
+            downloadBtn.onclick = () => {
+                let formattedContent = '';
+                let currentParagraph = [];
+                
+                correctedSubtitles.forEach((subtitle, index) => {
+                    if (subtitle.isNewParagraph && currentParagraph.length > 0) {
+                        formattedContent += currentParagraph.join('');
+                        formattedContent += '\n\n';
+                        currentParagraph = [];
+                    }
+                    currentParagraph.push(subtitle.text);
+                });
+                
+                if (currentParagraph.length > 0) {
+                    formattedContent += currentParagraph.join('');
+                }
+
+                formattedContent = formattedContent.replace(/\n\s*\n/g, '\n\n').trim();
+
+                navigator.clipboard.writeText(formattedContent).then(() => {
+                    showStatus('已复制到剪贴板！', 'success');
+                    setTimeout(() => {
+                        showStatus('', '');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                    showStatus('复制失败，请手动复制', 'error');
+                });
+            };
+
+            showStatus('字幕内容处理完成！', 'success');
+            downloadArea.style.display = 'block';
+            startButton.disabled = false;
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '0%';
+            progressContainer.style.display = 'none';
+            showStatus(error.message || '处理内容时发生错误', 'error');
+            startButton.disabled = false;
+            console.error('Error:', error);
+        });
+    }
+
+    let modelParameters = {
+        siliconflowKey: "sk-zgmoobmtrwgqjyjyvuuipdhxqnjeqmdzpuqjjmkxfbgakecg",
+        model: "Pro/deepseek-ai/DeepSeek-V3-1226",
+        maxTokens: 4096,
+        temperature: 0.1,
+        topP: 0.01,
+        topK: 30,
+        frequencyPenalty: 0.5,
+        systemPrompt: null
+    };
+
+    function showParameterModal() {
+        if (!paperInput.value.trim()) {
+            showStatus('请先输入论文摘要内容', 'error');
+            return;
+        }
+        document.getElementById('parameterModal').style.display = 'block';
+        document.getElementById('systemPrompt').value = modelParameters.systemPrompt || '';
+    }
+
+    function closeParameterModal() {
+        document.getElementById('parameterModal').style.display = 'none';
+    }
+
+    document.getElementById('parameterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('Form submitted');
+
+        modelParameters = {
+            siliconflowKey: document.getElementById('siliconflowKey').value,
+            model: document.getElementById('model').value,
+            maxTokens: parseInt(document.getElementById('maxTokens').value),
+            temperature: parseFloat(document.getElementById('temperature').value),
+            topP: parseFloat(document.getElementById('topP').value),
+            topK: parseInt(document.getElementById('topK').value),
+            frequencyPenalty: parseFloat(document.getElementById('frequencyPenalty').value),
+            systemPrompt: document.getElementById('systemPrompt').value || null
+        };
+
+        console.log('Parameters:', modelParameters);
+
+        closeParameterModal();
+
+        processFile();
+    });
+
+    function parseText(content) {
+        const paragraphs = [];
+        const contentParagraphs = content.split(/\n\s*\n/);
+        
+        let currentIndex = 1;
+        contentParagraphs.forEach(paragraph => {
+            const sentences = paragraph.split(/(?<=[。！？])/);
+            sentences.forEach((text, index) => {
+                if (text.trim()) {
+                    paragraphs.push({
+                        index: currentIndex++,
+                        text: text.trim(),
+                        isNewParagraph: index === 0
+                    });
+                }
+            });
+        });
+
+        return paragraphs;
+    }
+
+    function showComparison() {
+        comparisonContainer.style.display = 'block';
+        originalContent.innerHTML = '';
+        correctedContentDiv.innerHTML = '';
+        modifiedEntries = [];
+        subtitlePositions.clear();
+
+        const originalFragment = document.createDocumentFragment();
+        const correctedFragment = document.createDocumentFragment();
+
+        for (const original of originalSubtitles) {
+            const corrected = correctedSubtitles.find(sub => sub.index === original.index) ||
+                { index: original.index, time: original.time, text: "[字幕缺失]" };
+
+            const isModified = isSubtitleModified(original, corrected);
+            if (isModified) {
+                modifiedEntries.push({
+                    index: original.index,
+                    original: original.text,
+                    corrected: corrected.text
+                });
+            }
+
+            originalFragment.appendChild(createSubtitleEntryElement(original));
+            correctedFragment.appendChild(createSubtitleEntryElement(corrected, original));
+        }
+
+        originalContent.appendChild(originalFragment);
+        correctedContentDiv.appendChild(correctedFragment);
+
+        requestAnimationFrame(() => {
+            updateSubtitlePositions();
+            createMarkers();
+            setupSyncScroll();
+        });
+    }
+
+    function updateSubtitlePositions() {
+        const correctedEntries = correctedContentDiv.querySelectorAll('.subtitle-entry');
+        correctedEntries.forEach(entry => {
+            const index = parseInt(entry.dataset.index);
+            if (!isNaN(index)) {
+                subtitlePositions.set(index, {
+                    top: entry.offsetTop,
+                    height: entry.offsetHeight
+                });
+            }
+        });
+    }
+
+    function createMarkers() {
+        markerArea.innerHTML = '';
+        const correctedColumn = document.getElementById('correctedSubtitles');
+        const totalHeight = correctedColumn.scrollHeight;
+        const fragment = document.createDocumentFragment();
+
+        modifiedEntries.forEach(entry => {
+            const position = subtitlePositions.get(entry.index);
+            if (position) {
+                const marker = document.createElement('div');
+                marker.className = 'marker';
+                marker.dataset.index = entry.index;
+                marker.style.top = `${(position.top / totalHeight) * 100}%`;
+
+                const tooltip = document.createElement('div');
+                tooltip.className = 'marker-tooltip';
+                const cleanOriginal = entry.original.replace(/<[^>]*>/g, '');
+                const cleanCorrected = entry.corrected.replace(/<[^>]*>/g, '');
+                tooltip.textContent = `原文: ${entry.original}\n修改: ${entry.corrected}`;
+                marker.appendChild(tooltip);
+
+                marker.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    scrollToSubtitle(entry.index);
+                };
+
+                fragment.appendChild(marker);
+            }
+        });
+
+        markerArea.appendChild(fragment);
+    }
+
+    function scrollToSubtitle(index) {
+        const position = subtitlePositions.get(index);
+        if (!position) return;
+
+        const correctedColumn = document.getElementById('correctedSubtitles');
+        const originalColumn = document.getElementById('originalSubtitles');
+        const containerHeight = correctedColumn.clientHeight;
+        const scrollTop = position.top - (containerHeight / 2) + (position.height / 2);
+
+        document.querySelectorAll('.subtitle-entry.highlighted').forEach(el => {
+            el.classList.remove('highlighted');
+        });
+
+        const element = correctedContentDiv.querySelector(`.subtitle-entry[data-index="${index}"]`);
+        if (element) {
+            element.classList.add('highlighted');
+
+            isScrolling = true;
+
+            originalColumn.scrollTop = scrollTop;
+            correctedColumn.scrollTop = scrollTop;
+
+            setTimeout(() => {
+                element.classList.remove('highlighted');
+                isScrolling = false;
+            }, 2000);
+        }
+    }
+
+    function createSubtitleEntryElement(subtitle, original = null) {
+        const div = document.createElement('div');
+        let className = "subtitle-entry";
+        let textClass = "";
+        div.dataset.index = subtitle.index;
+
+        if (subtitle.isNewParagraph) {
+            className += " new-paragraph";
+        }
+
+        if (original) {
+            const isModified = isSubtitleModified(original, subtitle);
+            if (isModified) {
+                className += " modified";
+                textClass = "modified";
+
+                function parseAndHighlight(text, originalText) {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+                    const originalDoc = parser.parseFromString(originalText, 'text/html');
+
+                    function processNode(node, originalNode) {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            let newText = '';
+                            let originalContent = originalNode ? originalNode.textContent : '';
+                            let currentText = node.textContent;
+
+                            for (let i = 0; i < currentText.length; i++) {
+                                const char = currentText[i];
+                                if ('的得地'.includes(char)) {
+                                    const originalChar = originalContent[i];
+                                    if ('的得地'.includes(originalChar) && originalChar !== char) {
+                                        newText += `<span class="dedede-modified">${char}</span>`;
+                                    } else {
+                                        newText += char;
+                                    }
+                                } else {
+                                    newText += char;
+                                }
+                            }
+
+                            const span = document.createElement('span');
+                            span.innerHTML = newText;
+                            return span;
+                        }
+
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            const newElement = document.createElement(node.tagName);
+                            Array.from(node.attributes).forEach(attr => {
+                                newElement.setAttribute(attr.name, attr.value);
+                            });
+
+                            Array.from(node.childNodes).forEach((child, index) => {
+                                const originalChild = originalNode ? originalNode.childNodes[index] : null;
+                                const processedChild = processNode(child, originalChild);
+                                if (processedChild) {
+                                    newElement.appendChild(processedChild);
+                                }
+                            });
+
+                            return newElement;
+                        }
+
+                        return node.cloneNode(true);
+                    }
+
+                    const processedBody = processNode(doc.body, originalDoc.body);
+                    return processedBody.innerHTML;
+                }
+
+                const highlightedText = parseAndHighlight(subtitle.text, original.text);
+
+                div.innerHTML = `
+                <div class="sentence-index">
+                    ${subtitle.index}
+                </div>
+                <div class="text ${textClass}" contenteditable="true"
+                    onblur="updateSubtitleText(${subtitle.index}, this.textContent)"
+                >${highlightedText}</div>
+            `;
+            } else {
+                div.innerHTML = `
+                <div class="sentence-index">
+                    ${subtitle.index}
+                </div>
+                <div class="text ${textClass}" contenteditable="true"
+                    onblur="updateSubtitleText(${subtitle.index}, this.textContent)"
+                >${subtitle.text}</div>
+            `;
+            }
+        } else {
+            function parseAndHighlight(text, originalText) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const originalDoc = parser.parseFromString(originalText, 'text/html');
+
+                function processNode(node, originalNode) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        let newText = '';
+                        let originalContent = originalNode ? originalNode.textContent : '';
+                        let currentText = node.textContent;
+
+                        for (let i = 0; i < currentText.length; i++) {
+                            const char = currentText[i];
+                            if ('的得地'.includes(char)) {
+                                const originalChar = originalContent[i];
+                                if ('的得地'.includes(originalChar) && originalChar !== char) {
+                                    newText += `<span class="dedede-modified">${char}</span>`;
+                                } else {
+                                    newText += char;
+                                }
+                            } else {
+                                newText += char;
+                            }
+                        }
+
+                        const span = document.createElement('span');
+                        span.innerHTML = newText;
+                        return span;
+                    }
+
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const newElement = document.createElement(node.tagName);
+                        Array.from(node.attributes).forEach(attr => {
+                            newElement.setAttribute(attr.name, attr.value);
+                        });
+
+                        Array.from(node.childNodes).forEach((child, index) => {
+                            const originalChild = originalNode ? originalNode.childNodes[index] : null;
+                            const processedChild = processNode(child, originalChild);
+                            if (processedChild) {
+                                newElement.appendChild(processedChild);
+                            }
+                        });
+
+                        return newElement;
+                    }
+
+                    return node.cloneNode(true);
+                }
+
+                const processedBody = processNode(doc.body, originalDoc.body);
+                return processedBody.innerHTML;
+            }
+            const correctedSubtitle = correctedSubtitles.find(s => s.index === subtitle.index);
+            if (correctedSubtitle && isSubtitleModified(subtitle, correctedSubtitle)) {
+                const highlightedOriginalText = parseAndHighlight(subtitle.text, correctedSubtitle.text);
+                div.innerHTML = `
+            <div class="sentence-index">
+                ${subtitle.index}
+            </div>
+            <div class="text ${textClass}">${highlightedOriginalText}</div>
+        `;
+            } else {
+                div.innerHTML = `
+            <div class="sentence-index">
+                ${subtitle.index}
+            </div>
+            <div class="text ${textClass}">${subtitle.text}</div>
+        `;
+            }
+        }
+
+        div.className = className;
+        return div;
+    }
+
+    function isSubtitleModified(original, corrected) {
+        return original.text.trim().replace(/\r?\n/g, ' ').normalize() !==
+            corrected.text.trim().replace(/\r?\n/g, ' ').normalize();
+    }
+
+    function setupSyncScroll() {
+        const originalColumn = document.getElementById('originalSubtitles');
+        const correctedColumn = document.getElementById('correctedSubtitles');
+
+        originalColumn.onscroll = () => {
+            if (!isScrolling) {
+                correctedColumn.scrollTop = originalColumn.scrollTop;
+            }
+        };
+
+        correctedColumn.onscroll = () => {
+            if (!isScrolling) {
+                originalColumn.scrollTop = correctedColumn.scrollTop;
+            }
+        };
+    }
+
+    const debouncedUpdateSubtitleText = debounce((index, newText) => {
+        const subtitle = correctedSubtitles.find(s => s.index === index);
+        if (subtitle) {
+            const oldText = subtitle.text;
+            subtitle.text = newText;
+
+            const originalSubtitle = originalSubtitles.find(s => s.index === index);
+            const wasModified = isSubtitleModified(originalSubtitle, { text: oldText });
+            const isNowModified = isSubtitleModified(originalSubtitle, { text: newText });
+
+            if (wasModified !== isNowModified) {
+                updateModifiedStatus(index, isNowModified);
+                updateSubtitlePositions();
+                createMarkers();
+            }
+        }
+    }, 300);
+
+    function updateSubtitleText(index, newText) {
+        const subtitle = correctedSubtitles.find(s => s.index === index);
+        if (subtitle) {
+            const oldText = subtitle.text;
+            subtitle.text = newText;
+
+            const originalSubtitle = originalSubtitles.find(s => s.index === index);
+            const wasModified = isSubtitleModified(originalSubtitle, { text: oldText });
+            const isNowModified = isSubtitleModified(originalSubtitle, { text: newText });
+
+            if (wasModified !== isNowModified) {
+                updateModifiedStatus(index, isNowModified);
+                const entry = correctedContentDiv.querySelector(`.subtitle-entry[data-index="${index}"]`);
+                if (entry) {
+                    const newEntry = createSubtitleEntryElement(subtitle, originalSubtitle);
+                    entry.parentNode.replaceChild(newEntry, entry);
+                }
+                updateSubtitlePositions();
+                createMarkers();
+            }
+        }
+    }
+
+    function updateSubtitleTime(index, newTime) {
+        const subtitle = correctedSubtitles.find(s => s.index === index);
+        if (subtitle) {
+            subtitle.time = newTime;
+        }
+    }
+
+    function updateModifiedStatus(index, isModified) {
+        const entry = correctedContentDiv.querySelector(`.subtitle-entry[data-index="${index}"]`);
+        if (entry) {
+            entry.classList.toggle('modified', isModified);
+            entry.querySelector('.text').classList.toggle('modified', isModified);
+        }
+    }
+
+    function showStatus(message, type) {
+        status.textContent = message;
+        status.style.display = message ? 'block' : 'none';
+        status.className = '';
+        if (type) {
+            status.classList.add('status-' + type);
+        }
+    }
+
+    function displaySentence(container, sentence, index, isModified = false) {
+        const entry = document.createElement('div');
+        entry.className = `subtitle-entry${isModified ? ' modified' : ''}`;
+        
+        const indexSpan = document.createElement('div');
+        indexSpan.className = 'sentence-index';
+        indexSpan.textContent = `${index + 1}.`;
+        
+        const content = document.createElement('div');
+        content.className = 'sentence-content';
+        content.textContent = sentence;
+        
+        entry.appendChild(indexSpan);
+        entry.appendChild(content);
+        container.appendChild(entry);
+    }
+    
+    function updateDisplay(originalText, correctedText) {
+        const originalContainer = document.getElementById('originalContent');
+        const correctedContainer = document.getElementById('correctedContent');
+        
+        originalContainer.innerHTML = '';
+        correctedContainer.innerHTML = '';
+        
+        const originalSentences = originalText.split(/[。！？.!?]/).filter(s => s.trim());
+        const correctedSentences = correctedText.split(/[。！？.!?]/).filter(s => s.trim());
+        
+        originalSentences.forEach((sentence, index) => {
+            displaySentence(originalContainer, sentence, index);
+        });
+        
+        correctedSentences.forEach((sentence, index) => {
+            const isModified = sentence !== originalSentences[index];
+            displaySentence(correctedContainer, sentence, index, isModified);
+        });
+    }
+
+</script>
+</body>
+</html>
